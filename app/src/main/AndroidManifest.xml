@@ -22,13 +22,18 @@
 
         <!-- MapActivity를 기본 액티비티로 설정 -->
         <activity
-            android:name=".MapActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- MapActivity 추가 -->
+        <activity
+            android:name=".MapActivity"
+            android:exported="true"/>
 
         <!-- SettingActivity 추가 -->
         <activity
