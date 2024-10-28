@@ -25,5 +25,4 @@
         android:text="Connect"
         android:textColor="@color/light_blue"
         android:textSize="20sp" />
-
 </LinearLayout>
