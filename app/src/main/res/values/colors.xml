@@ -2,6 +2,8 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="light_blue">#87CEEB</color>
+
 
     <color name="purple_500">#121212</color> <!-- 다크 모드용 어두운 색상 -->
     <color name="button_dark_mode">#333333</color> <!-- 다크 모드 버튼 색상 -->
