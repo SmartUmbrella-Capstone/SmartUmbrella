@@ -1,12 +1,26 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- 필수 권한들 -->
+    <!-- Bluetooth 관련 권한 -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+
+    <!-- Android 12 이상에서 필요한 Bluetooth 권한 -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+
+    <!-- 알림 권한 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- 위치 관련 권한 (Bluetooth와 함께 필요함) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- 위치 권한을 사용하는 경우, ACCESS_COARSE_LOCATION 권한은 Android 10 이하에서만 필요 -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- 기기에서 알림 정책을 변경하는 데 필요한 권한 -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
     <application
         android:allowBackup="true"

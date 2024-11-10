@@ -2,7 +2,6 @@ package com.example.smartumbrella;
 
 import android.os.Bundle;
 import androidx.appcompat.widget.Toolbar;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,6 +19,8 @@ import java.util.List;
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
     private RecyclerView locationList;
     private LocationAdapter adapter;
+    private double latitude, longitude;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,9 +30,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);  // 뒤로가기 버튼 활성화
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().
-                findFragmentById(R.id.map);
+        // GPS 위치 받기
+        latitude = getIntent().getDoubleExtra("latitude", 37.5665);  // 서울의 기본값
+        longitude = getIntent().getDoubleExtra("longitude", 126.9780);  // 서울의 기본값
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
         // RecyclerView 설정
         locationList = findViewById(R.id.location_list);
         locationList.setLayoutManager(new LinearLayoutManager(this));
@@ -47,18 +52,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         // 어댑터 설정
         adapter = new LocationAdapter(locations);
         locationList.setAdapter(adapter);
-
     }
 
     @Override
-    public void onMapReady(@NonNull GoogleMap googleMap) {
-        LatLng seoul = new LatLng( 37.585187047530816, 126.92491924526931);
-        googleMap.addMarker(new MarkerOptions().position(seoul).title("Maker in Seoul"));
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(seoul));
-        float zoomLevel = 15.0f; // Adjust this value for the desired zoom level
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, zoomLevel));
-
+    public void onMapReady(GoogleMap googleMap) {
+        LatLng location = new LatLng(latitude, longitude);
+        googleMap.addMarker(new MarkerOptions().position(location).title("Last Known Location"));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15.0f));
     }
+
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();  // 뒤로가기 버튼 클릭 시 동작
