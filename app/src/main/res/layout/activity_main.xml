@@ -9,6 +9,7 @@
     android:background="@color/light_blue">
 
 
+
     <ImageView
         android:id="@+id/umbrella"
         android:layout_width="180dp"
