@@ -4,9 +4,11 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Telephony;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -15,18 +17,31 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
     private BLEManager bleManager;
+    private SmsReceiver smsReceiver;
     private static final int REQUEST_CODE_BLUETOOTH = 1;
+    private static final int  REQUEST_CODE_SMS_PERMISSION= 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECEIVE_SMS}, REQUEST_CODE_SMS_PERMISSION);
+        }
 
         // BLEManager 초기화
         bleManager = new BLEManager(this);
+        // SmsReceiver를 초기화하고 BLEManager 전달
+        smsReceiver = new SmsReceiver(bleManager);
+        // BroadcastReceiver 등록 (SMS 수신)
+        IntentFilter filter = new IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION);
+        registerReceiver(smsReceiver, filter);
+
 
         // 버튼 초기화
         Button buttonMap = findViewById(R.id.button1);

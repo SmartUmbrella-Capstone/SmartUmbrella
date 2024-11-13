@@ -16,6 +16,8 @@ import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -30,8 +32,9 @@ public class BLEManager {
     private BluetoothLeScanner scanner;
     private BluetoothDevice selectedDevice;
     private BluetoothGatt gatt;
+    private BluetoothGattCharacteristic characteristic;
 
-    // ESP32와 맞춰야 할 UUID
+    // UUIDs for ESP32 and BLE service/characteristic
     private static final String TARGET_DEVICE_NAME = "SmartUmbrella";
     private static final String SERVICE_UUID = "37C4E592-77F4-2C36-8BE2-6E5456E6E2CA";
     private static final String CHARACTERISTIC_UUID = "00001111-0000-1000-8000-00805f9b34fb";
@@ -40,14 +43,14 @@ public class BLEManager {
         this.context = context;
         this.bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         this.bluetoothAdapter = bluetoothManager.getAdapter();
+        this.scanner = bluetoothAdapter != null ? bluetoothAdapter.getBluetoothLeScanner() : null;
 
         if (bluetoothAdapter == null) {
             throw new RuntimeException("Bluetooth is not supported on this device");
         }
-        this.scanner = bluetoothAdapter.getBluetoothLeScanner();
     }
 
-    // 권한 체크 함수
+    // Check permissions
     public boolean haveAllPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             return context.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
@@ -59,7 +62,7 @@ public class BLEManager {
         }
     }
 
-    // BLE 스캔 시작
+    // Start BLE scan
     @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
     public void startScanning() {
         if (!haveAllPermissions()) {
@@ -78,7 +81,7 @@ public class BLEManager {
         }
     }
 
-    // BLE 스캔 콜백
+    // BLE scan callback
     private final ScanCallback scanCallback = new ScanCallback() {
         @SuppressLint("MissingPermission")
         @Override
@@ -90,7 +93,7 @@ public class BLEManager {
                 selectedDevice = result.getDevice();
                 scanner.stopScan(this);
                 Toast.makeText(context, "기기 발견: " + TARGET_DEVICE_NAME, Toast.LENGTH_SHORT).show();
-                connect(); // 기기 찾으면 연결
+                connect();
             } else {
                 Log.d("BLEManager", "기기 발견 실패 또는 이름 불일치");
             }
@@ -104,7 +107,7 @@ public class BLEManager {
         }
     };
 
-    // 기기 연결 함수
+    // Connect to device
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     public void connect() {
         if (selectedDevice == null) {
@@ -112,16 +115,12 @@ public class BLEManager {
             throw new IllegalStateException("Device not found. Ensure scanning is completed before connecting.");
         }
 
-        try {
-            gatt = selectedDevice.connectGatt(context, false, gattCallback);
-            Log.d("BLEManager", "기기 연결 시도 중...");
-            Toast.makeText(context, "기기 연결 시도 중...", Toast.LENGTH_SHORT).show();
-        } catch (SecurityException e) {
-            Log.e("BLEManager", "권한 부족으로 연결 실패", e);
-            Toast.makeText(context, "권한 부족으로 연결 실패", Toast.LENGTH_SHORT).show();
-        }
+        gatt = selectedDevice.connectGatt(context, false, gattCallback);
+        Log.d("BLEManager", "기기 연결 시도 중...");
+        Toast.makeText(context, "기기 연결 시도 중...", Toast.LENGTH_SHORT).show();
     }
-    // 기기 연결 끊기 함수
+
+    // Disconnect from device
     @SuppressLint("MissingPermission")
     public void disconnect() {
         if (gatt != null) {
@@ -136,65 +135,35 @@ public class BLEManager {
         }
     }
 
-    // GATT 콜백
+    // GATT callback
     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
         @SuppressLint("MissingPermission")
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            super.onConnectionStateChange(gatt, status, newState);
-
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothGatt.STATE_CONNECTED) {
                     Log.d("BLEManager", "Bluetooth 연결 성공");
-
-                    // 메인 스레드에서 Toast 표시
-                    if (context instanceof Activity) {
-                        ((Activity) context).runOnUiThread(() ->
-                                Toast.makeText(context, "기기와 연결되었습니다.", Toast.LENGTH_SHORT).show());
-                    }
-
-                    // 연결 성공 후 서비스 검색 시작
+                    new Handler(Looper.getMainLooper()).post(() ->
+                            Toast.makeText(context, "Bluetooth 연결 성공", Toast.LENGTH_SHORT).show()
+                    );
                     gatt.discoverServices();
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     Log.d("BLEManager", "Bluetooth 연결 해제");
-
-                    // 메인 스레드에서 Toast 표시
-                    if (context instanceof Activity) {
-                        ((Activity) context).runOnUiThread(() ->
-                                Toast.makeText(context, "기기와의 연결이 해제되었습니다.", Toast.LENGTH_SHORT).show());
-                    }
                 }
             } else {
                 Log.e("BLEManager", "Bluetooth 연결 실패, 상태 코드: " + status);
-
-                // 메인 스레드에서 Toast 표시
-                if (context instanceof Activity) {
-                    ((Activity) context).runOnUiThread(() ->
-                            Toast.makeText(context, "기기와 연결할 수 없습니다.", Toast.LENGTH_SHORT).show());
-                }
-
-                // 연결 실패 시 gatt 객체를 정리
                 gatt.close();
                 BLEManager.this.gatt = null;
             }
         }
 
-        // 서비스 검색 완료 시 호출
+        // Called when services are discovered
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.d("BLEManager", "서비스 검색 완료");
-
                 BluetoothGattService service = gatt.getService(UUID.fromString(SERVICE_UUID));
                 if (service != null) {
-                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(CHARACTERISTIC_UUID));
-                    if (characteristic != null) {
-                        writeCharacteristic(characteristic, "OK"); // "OK" 메시지 전송 예시
-                    } else {
-                        Log.e("BLEManager", "특성 UUID 불일치: " + CHARACTERISTIC_UUID);
-                    }
-                } else {
-                    Log.e("BLEManager", "서비스 UUID 불일치: " + SERVICE_UUID);
+                    characteristic = service.getCharacteristic(UUID.fromString(CHARACTERISTIC_UUID));
                 }
             } else {
                 Log.e("BLEManager", "서비스 검색 실패");
@@ -202,17 +171,22 @@ public class BLEManager {
         }
     };
 
-
-    // 데이터 쓰기 함수
-    public void writeCharacteristic(BluetoothGattCharacteristic characteristic, String value) {
-        characteristic.setValue(value);
-        @SuppressLint("MissingPermission") boolean success = gatt.writeCharacteristic(characteristic);
-        if (!success) {
-            Log.e("BLEManager", "특성에 데이터 쓰기 실패");
-            Toast.makeText(context, "데이터 전송 실패", Toast.LENGTH_SHORT).show();
+    // Send SMS alert via BLE
+    @SuppressLint("MissingPermission")
+    public void sendSmsAlert(String message) {
+        if (characteristic != null) {
+            characteristic.setValue(message);  // 메시지를 특성에 설정
+            boolean success = gatt.writeCharacteristic(characteristic); // 특성을 ESP32로 전송
+            if (success) {
+                Log.d("BLEManager", "SMS 경고 전송 성공: " + message);
+                Toast.makeText(context, "SMS 경고 전송 성공: " + message, Toast.LENGTH_SHORT).show();
+            } else {
+                Log.e("BLEManager", "SMS 경고 전송 실패");
+                Toast.makeText(context, "SMS 경고 전송 실패", Toast.LENGTH_SHORT).show();
+            }
         } else {
-            Log.d("BLEManager", "데이터 전송 성공: " + value);
-            Toast.makeText(context, "데이터 전송 성공: " + value, Toast.LENGTH_SHORT).show();
+            Log.e("BLEManager", "전송할 특성이 없습니다.");
+            Toast.makeText(context, "전송할 특성이 없습니다.", Toast.LENGTH_SHORT).show();
         }
     }
 }
