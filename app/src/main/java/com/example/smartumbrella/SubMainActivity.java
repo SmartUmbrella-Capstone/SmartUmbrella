@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat;
 
 public class SubMainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_LOCATION = 1;
-    private static final String TARGET_DEVICE_NAME = "ESP32_BLE_Test";  // 타겟 장치 이름
+    private static final String TARGET_DEVICE_NAME = "SmartUmbrella";  // 타겟 장치 이름
     private BluetoothAdapter bluetoothAdapter;
 
     @Override
@@ -53,6 +53,7 @@ public class SubMainActivity extends AppCompatActivity {
             Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
             startActivityForResult(intent, REQUEST_CODE_LOCATION);
         });
+
         // Skip button to go directly to MainActivity
         Button skipButton = findViewById(R.id.skip_button);
         skipButton.setOnClickListener(view -> {

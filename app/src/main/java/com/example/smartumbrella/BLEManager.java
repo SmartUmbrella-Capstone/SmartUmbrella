@@ -32,7 +32,7 @@ public class BLEManager {
     private BluetoothGatt gatt;
 
     // ESP32와 맞춰야 할 UUID
-    private static final String TARGET_DEVICE_NAME = "ESP32_BLE_Test";
+    private static final String TARGET_DEVICE_NAME = "SmartUmbrella";
     private static final String SERVICE_UUID = "37C4E592-77F4-2C36-8BE2-6E5456E6E2CA";
     private static final String CHARACTERISTIC_UUID = "00001111-0000-1000-8000-00805f9b34fb";
 
@@ -119,6 +119,20 @@ public class BLEManager {
         } catch (SecurityException e) {
             Log.e("BLEManager", "권한 부족으로 연결 실패", e);
             Toast.makeText(context, "권한 부족으로 연결 실패", Toast.LENGTH_SHORT).show();
+        }
+    }
+    // 기기 연결 끊기 함수
+    @SuppressLint("MissingPermission")
+    public void disconnect() {
+        if (gatt != null) {
+            Log.d("BLEManager", "기기 연결 끊기 시도...");
+            gatt.disconnect();
+            gatt.close();
+            gatt = null;
+            Toast.makeText(context, "기기와의 연결이 끊어졌습니다.", Toast.LENGTH_SHORT).show();
+        } else {
+            Log.e("BLEManager", "연결된 기기가 없습니다.");
+            Toast.makeText(context, "연결된 기기가 없습니다.", Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -31,7 +31,8 @@ public class MainActivity extends AppCompatActivity {
         // 버튼 초기화
         Button buttonMap = findViewById(R.id.button1);
         Button buttonSettings = findViewById(R.id.button2);
-        Button buttonCancel = findViewById(R.id.buttonCancel); // 연결 취소 버튼
+        Button buttonStartBLE = findViewById(R.id.buttonStartBLE); // Start BLE 버튼
+        Button buttonStopBLE = findViewById(R.id.buttonStopBLE); // Stop BLE 버튼
 
         // 지도 버튼 클릭 리스너
         buttonMap.setOnClickListener(v -> {
@@ -44,9 +45,13 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, SettingActivity.class);
             startActivity(intent);
         });
+        // Start BLE 버튼 클릭 리스너
+        buttonStartBLE.setOnClickListener(v -> startBLEScan());
 
-        // 연결 취소 버튼 클릭 리스너
-        buttonCancel.setOnClickListener(v -> showDisconnectDialog()); // 연결 해제 확인 다이얼로그 표시
+        // Stop BLE 버튼 클릭 리스너
+        buttonStopBLE.setOnClickListener(v -> stopBLEScan());
+
+
 
         // BLE 권한 요청
         requestBluetoothPermissions();
@@ -86,7 +91,6 @@ public class MainActivity extends AppCompatActivity {
 
             if (allPermissionsGranted) {
                 // 모든 권한이 허용된 경우 BLE 스캔 시작
-                startBLEScan();
             } else {
                 // 권한이 거부된 경우 사용자에게 알림
                 Toast.makeText(this, "Bluetooth 권한이 필요합니다.", Toast.LENGTH_SHORT).show();
@@ -103,19 +107,11 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "필수 권한이 없습니다.", Toast.LENGTH_SHORT).show();
         }
     }
-
-    // 연결 해제 확인 다이얼로그
-    private void showDisconnectDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("연결 해제")
-                .setMessage("정말 연결을 해제하시겠습니까?")
-                .setPositiveButton("예", (dialog, which) -> {
-                    // SubMainActivity로 이동
-                    Intent intent = new Intent(MainActivity.this, SubMainActivity.class);
-                    startActivity(intent);
-                    finish(); // MainActivity 종료
-                })
-                .setNegativeButton("아니오", null) // 액션 없이 다이얼로그 닫기
-                .show();
+    // BLE 스캔 중지 메서드
+    private void stopBLEScan() {
+        bleManager.disconnect(); // Assuming stopScanning method exists in BLEManager class
+        Toast.makeText(this, "BLE 스캔이 중지되었습니다.", Toast.LENGTH_SHORT).show();
     }
+
+
 }
