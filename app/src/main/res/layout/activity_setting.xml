@@ -85,12 +85,6 @@
         android:layout_height="wrap_content"
         android:text="업데이트 알림 받기" />
 
-    <CheckBox
-        android:id="@+id/checkBoxDarkMode"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="다크 모드 사용" />
-
     <Button
         android:id="@+id/buttonSave"
         android:layout_width="match_parent"
