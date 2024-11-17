@@ -73,4 +73,39 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insertWithOnConflict("UserSetting", null, values, SQLiteDatabase.CONFLICT_REPLACE);
         db.close();
     }
+
+    public Cursor getLocationLogs() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.query("LocationLog", null, null, null, null, null, null);
+    }
+
+    public void insertTestLocationLogs() {  //테스트용 임의 DB데이터
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // 테스트 데이터
+        String[] timestamps = {
+                "2024-11-17 10:00:00",
+                "2024-11-17 11:00:00",
+                "2024-11-17 12:00:00",
+                "2024-11-17 13:00:00",
+                "2024-11-17 14:00:00"
+        };
+
+        double[][] coordinates = {
+                {37.5665, 126.9780}, // 서울 시청
+                {37.5796, 126.9770}, // 경복궁
+                {37.5704, 126.9921}, // 종로3가
+                {37.5512, 126.9882}, // 남산타워
+                {37.5843, 127.0011}  // 동대문
+        };
+
+        for (int i = 0; i < timestamps.length; i++) {
+            ContentValues values = new ContentValues();
+            values.put("timestamp", timestamps[i]);
+            values.put("latitude", coordinates[i][0]);
+            values.put("longitude", coordinates[i][1]);
+            db.insert("LocationLog", null, values);
+        }
+        db.close();
+    }
 }
