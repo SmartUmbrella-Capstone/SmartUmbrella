@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "UserSettings.db";
@@ -59,9 +60,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    // Retrieve the latest settings from the database
+    // 최신 설정을 가져오는 메소드
     public Cursor getSettings() {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM " + TABLE_NAME + " ORDER BY " + COLUMN_ID + " DESC LIMIT 1", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME + " ORDER BY " + COLUMN_ID + " DESC LIMIT 1", null);
+        return cursor;
+    }
+
+    // 거리 설정을 가져오는 메소드
+    public int getDistanceSetting() {
+        int distance = 3;  // 기본값을 3미터로 설정
+        SQLiteDatabase db = this.getReadableDatabase();
+        // 최신 데이터의 거리 값을 가져오는 쿼리
+        Cursor cursor = db.rawQuery("SELECT " + COLUMN_DISTANCE + " FROM " + TABLE_NAME + " ORDER BY " + COLUMN_ID + " DESC LIMIT 1", null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            distance = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_DISTANCE));
+            Log.d("DB", "데이터베이스에서 가져온 거리 설정 값: " + distance);
+        } else {
+            Log.d("DB", "설정 값이 없거나 데이터베이스에서 값을 가져오는 데 실패했습니다.");
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return distance;
     }
 }
+

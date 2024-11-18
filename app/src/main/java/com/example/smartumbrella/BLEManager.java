@@ -41,11 +41,44 @@ public class BLEManager {
     private static final String SERVICE_UUID = "37C4E592-77F4-2C36-8BE2-6E5456E6E2CA";
     private static final String CHARACTERISTIC_UUID = "00001111-0000-1000-8000-00805f9b34fb";
     private static final String BATTERY_LEVEL_UUID = "00002A19-0000-1000-8000-00805f9b34fb";
-    private static final int RSSI_THRESHOLD = -45; // -70 dBm 이상이면 3미터 이하로 간주
+    private int getRssiThreshold() {
+        // 데이터베이스에서 설정된 거리 값을 가져옴
+        int userDistanceThreshold = dbHelper.getDistanceSetting();
+
+        // 사용자 설정에 맞게 RSSI 임계값으로 변환
+        int rssiThreshold = convertDistanceToRssi(userDistanceThreshold);
+
+        // 설정된 RSSI 임계값을 로그로 출력
+        Log.d("BLEManager", "RSSI 임계값: " + rssiThreshold);
+
+        return rssiThreshold;
+    }
+
+    private int convertDistanceToRssi(int distance) {
+        if (distance <= 1) {
+            return -30;  // 1미터 이하일 때 -30 dBm
+        } else if (distance <= 3) {
+            return -45;  // 3미터 이하일 때 -45 dBm
+        } else if (distance <= 5) {
+            return -55;  // 5미터 이하일 때 -55 dBm
+        } else if (distance <= 10) {
+            return -65;  // 10미터 이하일 때 -65 dBm
+        } else if (distance <= 20) {
+            return -75;  // 20미터 이하일 때 -75 dBm
+        } else if (distance <= 30) {
+            return -85;  // 30미터 이하일 때 -85 dBm
+        } else {
+            return -85;  // 30미터 초과일 때 기본값 -85 dBm
+        }
+    }
     private Handler rssiHandler = new Handler(Looper.getMainLooper());
     private Runnable rssiRunnable;
+    private DatabaseHelper dbHelper;
+
+
 
     public BLEManager(Context context) {
+        dbHelper = new DatabaseHelper(context);  // DatabaseHelper 인스턴스 생성
         this.context = context;
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
@@ -194,10 +227,11 @@ public class BLEManager {
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+            int rssiThreshold = getRssiThreshold();
             super.onReadRemoteRssi(gatt, rssi, status);
             Log.d("BLEManager", "현재 RSSI: " + rssi);
 
-            if (rssi < RSSI_THRESHOLD) {
+            if (rssi < rssiThreshold) {
                 showNotification("기기와 멀어졌습니다!", "기기가 3미터 이상 멀어졌습니다.");
                 sendDistanceAlert("DISTANCE_EXCEEDED");  // 임계값 초과 시 메시지 전송
             }
