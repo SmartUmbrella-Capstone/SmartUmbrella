@@ -41,7 +41,7 @@ public class BLEManager {
     private static final String SERVICE_UUID = "37C4E592-77F4-2C36-8BE2-6E5456E6E2CA";
     private static final String CHARACTERISTIC_UUID = "00001111-0000-1000-8000-00805f9b34fb";
     private static final String BATTERY_LEVEL_UUID = "00002A19-0000-1000-8000-00805f9b34fb";
-    private static final int RSSI_THRESHOLD = -50; // -70 dBm 이상이면 3미터 이하로 간주
+    private static final int RSSI_THRESHOLD = -45; // -70 dBm 이상이면 3미터 이하로 간주
     private Handler rssiHandler = new Handler(Looper.getMainLooper());
     private Runnable rssiRunnable;
 
@@ -197,18 +197,14 @@ public class BLEManager {
             super.onReadRemoteRssi(gatt, rssi, status);
             Log.d("BLEManager", "현재 RSSI: " + rssi);
 
-            // RSSI 값을 기반으로 기기와의 거리 계산
-            if (rssi > RSSI_THRESHOLD) {
-                // 3미터 이하로 간주하면 알림을 띄움
-                showNotification("기기와 가까워졌습니다!", "기기가 3미터 이내로 접근했습니다.");
-            } else {
-                // 3미터 이상이면 알림을 띄움
+            if (rssi < RSSI_THRESHOLD) {
                 showNotification("기기와 멀어졌습니다!", "기기가 3미터 이상 멀어졌습니다.");
+                sendDistanceAlert("DISTANCE_EXCEEDED");  // 임계값 초과 시 메시지 전송
             }
         }
     };
 
-    @SuppressLint("MissingPermission")
+        @SuppressLint("MissingPermission")
     public void readBatteryLevel() {
         if (batteryLevelCharacteristic != null) {
             gatt.readCharacteristic(batteryLevelCharacteristic);
@@ -293,6 +289,24 @@ public class BLEManager {
             Toast.makeText(context, "알림 표시 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show();
         }
     }
+    @SuppressLint("MissingPermission")
+    public void sendDistanceAlert(String message) {
+        if (characteristic != null) {
+            characteristic.setValue(message);  // 메시지를 특성에 설정
+            boolean success = gatt.writeCharacteristic(characteristic); // BLE로 전송
+            if (success) {
+                Log.d("BLEManager", "거리 경고 전송 성공: " + message);
+                Toast.makeText(context, "거리 경고 전송 성공: " + message, Toast.LENGTH_SHORT).show();
+            } else {
+                Log.e("BLEManager", "거리 경고 전송 실패");
+                Toast.makeText(context, "거리 경고 전송 실패", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Log.e("BLEManager", "전송할 특성이 없습니다.");
+            Toast.makeText(context, "전송할 특성이 없습니다.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
 
     // Send SMS alert via BLE
