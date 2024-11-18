@@ -37,6 +37,13 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
       delay(500);
       digitalWrite(BUZZER_PIN,LOW);
       delay(500);
+    }
+     if (message == "Call") {
+      Serial.println("Received call alert!");
+      // 부저 울리기 (전화 수신 알림)
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(1000);  // 1초 동안 울림
+      digitalWrite(BUZZER_PIN, LOW);
     } else {
       // Process other messages
       Serial.println("Message received from BLE: " + message);
