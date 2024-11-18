@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Telephony;
+import android.telephony.TelephonyManager;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -33,6 +34,9 @@ public class MainActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECEIVE_SMS}, REQUEST_CODE_SMS_PERMISSION);
         }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, 1);
+        }
 
         // BLEManager 초기화
         bleManager = new BLEManager(this);
@@ -41,6 +45,10 @@ public class MainActivity extends AppCompatActivity {
         // BroadcastReceiver 등록 (SMS 수신)
         IntentFilter filter = new IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION);
         registerReceiver(smsReceiver, filter);
+        // Create an instance of CallReceiver
+        CallReceiver callReceiver = new CallReceiver(bleManager);
+        IntentFilter callFilter = new IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED);
+        registerReceiver(callReceiver, callFilter);
 
 
         // 버튼 초기화

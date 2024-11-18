@@ -327,4 +327,22 @@ public class BLEManager {
             Toast.makeText(context, "전송할 특성이 없습니다.", Toast.LENGTH_SHORT).show();
         }
     }
+    // Send SMS alert via BLE
+    @SuppressLint("MissingPermission")
+    public void sendCallAlert(String message) {
+        if (characteristic != null) {
+            characteristic.setValue(message);  // 메시지를 특성에 설정
+            boolean success = gatt.writeCharacteristic(characteristic); // 특성을 ESP32로 전송
+            if (success) {
+                Log.d("BLEManager", "SMS 경고 전송 성공: " + message);
+                Toast.makeText(context, "SMS 경고 전송 성공: " + message, Toast.LENGTH_SHORT).show();
+            } else {
+                Log.e("BLEManager", "SMS 경고 전송 실패");
+                Toast.makeText(context, "SMS 경고 전송 실패", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Log.e("BLEManager", "전송할 특성이 없습니다.");
+            Toast.makeText(context, "전송할 특성이 없습니다.", Toast.LENGTH_SHORT).show();
+        }
+    }
 }
