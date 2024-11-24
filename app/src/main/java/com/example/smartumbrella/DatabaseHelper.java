@@ -8,18 +8,38 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
-    private static final String DATABASE_NAME = "UserSettings.db";
-    private static final int DATABASE_VERSION = 1;
-    private static final String TABLE_NAME = "settings";
 
-    // Column names
-    public static final String COLUMN_ID = "id";
-    public static final String COLUMN_UPDATE_ALERT = "updateAlert";
-    public static final String COLUMN_PRIORITY_ALERT = "priorityAlert";
-    public static final String COLUMN_LOCATION_LOG = "locationLog";
-    public static final String COLUMN_DISTANCE = "distance";
-    public static final String COLUMN_VOLUME = "volume";
-    public static final String COLUMN_INTERVAL = "interval";
+    private static final String DATABASE_NAME = "SmartUmbrella.db";
+    private static final int DATABASE_VERSION = 3; // 버전 업데이트
+
+    // UserSetting 테이블
+    private static final String TABLE_USER_SETTING = "UserSetting";
+    private static final String CREATE_TABLE_USER_SETTING = "CREATE TABLE " + TABLE_USER_SETTING + " (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "update_alert INTEGER, " +
+            "priority_alert INTEGER, " +
+            "distance INTEGER, " +
+            "volume INTEGER DEFAULT 50, " + // 기본값 포함
+            "interval TEXT, " +
+            "location_enable INTEGER DEFAULT 0" +
+            ");";
+
+    // LocationLog 테이블
+    private static final String TABLE_LOCATION_LOG = "LocationLog";
+    private static final String CREATE_TABLE_LOCATION_LOG = "CREATE TABLE " + TABLE_LOCATION_LOG + " (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "timestamp TEXT NOT NULL, " +
+            "latitude REAL NOT NULL, " +
+            "longitude REAL NOT NULL" +
+            ");";
+
+    // BatteryStatus 테이블
+    private static final String TABLE_BATTERY_STATUS = "BatteryStatus";
+    private static final String CREATE_TABLE_BATTERY_STATUS = "CREATE TABLE " + TABLE_BATTERY_STATUS + " (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "timestamp TEXT NOT NULL, " +
+            "battery_level INTEGER NOT NULL" +
+            ");";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -27,55 +47,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" +
-                COLUMN_ID + " INTEGER PRIMARY KEY, " +
-                COLUMN_UPDATE_ALERT + " INTEGER, " +
-                COLUMN_PRIORITY_ALERT + " INTEGER, " +
-                COLUMN_LOCATION_LOG + " INTEGER, " +
-                COLUMN_DISTANCE + " INTEGER, " +
-                COLUMN_VOLUME + " INTEGER, " +
-                COLUMN_INTERVAL + " TEXT)";
-        db.execSQL(CREATE_TABLE);
+        db.execSQL(CREATE_TABLE_USER_SETTING);
+        db.execSQL(CREATE_TABLE_LOCATION_LOG);
+        db.execSQL(CREATE_TABLE_BATTERY_STATUS);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
-        onCreate(db);
+        if (oldVersion < 2) {
+            // 기존 테이블에 새 컬럼 추가
+            db.execSQL("ALTER TABLE UserSetting ADD COLUMN volume INTEGER DEFAULT 50;");
+        }
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE UserSetting ADD COLUMN location_enable INTEGER DEFAULT 0;");
+        }
     }
 
-    // Save settings to the database
-    public void saveSettings(boolean updateAlert, boolean priorityAlert, boolean locationLog, int distance, int volume, String interval) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_UPDATE_ALERT, updateAlert ? 1 : 0);
-        values.put(COLUMN_PRIORITY_ALERT, priorityAlert ? 1 : 0);
-        values.put(COLUMN_LOCATION_LOG, locationLog ? 1 : 0);
-        values.put(COLUMN_DISTANCE, distance);
-        values.put(COLUMN_VOLUME, volume);
-        values.put(COLUMN_INTERVAL, interval);
+    // UserSetting 데이터 가져오기
+    public Cursor getUserSettings() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.query(TABLE_USER_SETTING, null, null, null, null, null, null);
+    }
 
-        // Insert or update row
-        db.insertWithOnConflict(TABLE_NAME, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+    public void saveUserSettings(ContentValues values) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.insertWithOnConflict(TABLE_USER_SETTING, null, values, SQLiteDatabase.CONFLICT_REPLACE);
         db.close();
     }
 
-    // 최신 설정을 가져오는 메소드
-    public Cursor getSettings() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME + " ORDER BY " + COLUMN_ID + " DESC LIMIT 1", null);
-        return cursor;
-    }
-
-    // 거리 설정을 가져오는 메소드
+    // 거리 설정 가져오기
     public int getDistanceSetting() {
         int distance = 3;  // 기본값을 3미터로 설정
         SQLiteDatabase db = this.getReadableDatabase();
-        // 최신 데이터의 거리 값을 가져오는 쿼리
-        Cursor cursor = db.rawQuery("SELECT " + COLUMN_DISTANCE + " FROM " + TABLE_NAME + " ORDER BY " + COLUMN_ID + " DESC LIMIT 1", null);
+        Cursor cursor = db.rawQuery("SELECT distance FROM " + TABLE_USER_SETTING + " ORDER BY id DESC LIMIT 1", null);
 
         if (cursor != null && cursor.moveToFirst()) {
-            distance = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_DISTANCE));
+            distance = cursor.getInt(cursor.getColumnIndexOrThrow("distance"));
             Log.d("DB", "데이터베이스에서 가져온 거리 설정 값: " + distance);
         } else {
             Log.d("DB", "설정 값이 없거나 데이터베이스에서 값을 가져오는 데 실패했습니다.");
@@ -85,5 +92,52 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         return distance;
     }
-}
 
+    // LocationLog 데이터 가져오기
+    public Cursor getLocationLogs() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.query(TABLE_LOCATION_LOG, null, null, null, null, null, null);
+    }
+
+    public void insertLocationLog(String timestamp, double latitude, double longitude) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("timestamp", timestamp);
+        values.put("latitude", latitude);
+        values.put("longitude", longitude);
+
+        db.insert(TABLE_LOCATION_LOG, null, values);
+        db.close();
+    }
+
+    // 테스트 LocationLog 데이터 삽입
+    public void insertTestLocationLogs() {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // 테스트 데이터
+        String[] timestamps = {
+                "2024-11-17 10:00:00",
+                "2024-11-17 11:00:00",
+                "2024-11-17 12:00:00",
+                "2024-11-17 13:00:00",
+                "2024-11-17 14:00:00"
+        };
+
+        double[][] coordinates = {
+                {37.5665, 126.9780}, // 서울 시청
+                {37.5796, 126.9770}, // 경복궁
+                {37.5704, 126.9921}, // 종로3가
+                {37.5512, 126.9882}, // 남산타워
+                {37.5843, 127.0011}  // 동대문
+        };
+
+        for (int i = 0; i < timestamps.length; i++) {
+            ContentValues values = new ContentValues();
+            values.put("timestamp", timestamps[i]);
+            values.put("latitude", coordinates[i][0]);
+            values.put("longitude", coordinates[i][1]);
+            db.insert(TABLE_LOCATION_LOG, null, values);
+        }
+        db.close();
+    }
+}

@@ -1,5 +1,6 @@
 package com.example.smartumbrella;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
@@ -9,7 +10,7 @@ import androidx.appcompat.widget.Toolbar;
 
 public class SettingActivity extends AppCompatActivity {
 
-    private CheckBox checkBoxUpdateAlert, checkBoxPriority, checkBoxLocationLog;
+    private CheckBox checkBoxUpdateAlert, checkBoxPriority, checkBoxLocationEnable;
     private SeekBar seekBarDistance, seekBarVolume;
     private TextView textViewDistance, textViewVolume;
     private Spinner spinnerInterval;
@@ -21,30 +22,32 @@ public class SettingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
 
-        // Initialize UI components
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
+        // Initialize DatabaseHelper
         dbHelper = new DatabaseHelper(this);
+
+        // Initialize UI components
         initializeUI();
-        loadSettingsFromDatabase();
+
+        // Load settings into UI
+        getSettings();
 
         // Save button listener to save settings to SQLite and close activity
         buttonSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                saveSettingsToDatabase();
-                Toast.makeText(SettingActivity.this, "설정이 저장되었습니다.", Toast.LENGTH_SHORT).show();
+                saveSettings();
                 finish();
             }
         });
     }
 
+    /**
+     * Initialize UI components and set listeners
+     */
     private void initializeUI() {
         checkBoxUpdateAlert = findViewById(R.id.checkBoxUpdateAlert);
         checkBoxPriority = findViewById(R.id.checkBoxPriority);
-        checkBoxLocationLog = findViewById(R.id.checkBoxLocationLog);
+        checkBoxLocationEnable = findViewById(R.id.checkBoxLocationEnable);
         seekBarDistance = findViewById(R.id.seekBarDistance);
         seekBarVolume = findViewById(R.id.seekBarVolume);
         textViewDistance = findViewById(R.id.textViewDistance);
@@ -68,8 +71,12 @@ public class SettingActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 textViewDistance.setText("알림 거리: " + progress + "m");
             }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
         seekBarVolume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -77,33 +84,47 @@ public class SettingActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 textViewVolume.setText("알림 음량: " + progress);
             }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
     }
 
-    private void loadSettingsFromDatabase() {
-        Cursor cursor = dbHelper.getSettings();
+    /**
+     * Load settings from database and apply to UI components
+     */
+    private void getSettings() {
+        Cursor cursor = dbHelper.getUserSettings(); // Use DatabaseHelper to fetch settings
         if (cursor.moveToFirst()) {
-            checkBoxUpdateAlert.setChecked(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_UPDATE_ALERT)) == 1);
-            checkBoxPriority.setChecked(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_PRIORITY_ALERT)) == 1);
-            checkBoxLocationLog.setChecked(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_LOCATION_LOG)) == 1);
-            seekBarDistance.setProgress(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_DISTANCE)));
-            seekBarVolume.setProgress(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_VOLUME)));
-            String interval = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_INTERVAL));
+            checkBoxUpdateAlert.setChecked(cursor.getInt(cursor.getColumnIndexOrThrow("update_alert")) == 1);
+            checkBoxPriority.setChecked(cursor.getInt(cursor.getColumnIndexOrThrow("priority_alert")) == 1);
+            checkBoxLocationEnable.setChecked(cursor.getInt(cursor.getColumnIndexOrThrow("location_enable")) == 1);
+            seekBarDistance.setProgress(cursor.getInt(cursor.getColumnIndexOrThrow("distance")));
+            seekBarVolume.setProgress(cursor.getInt(cursor.getColumnIndexOrThrow("volume")));
+            String interval = cursor.getString(cursor.getColumnIndexOrThrow("interval"));
             spinnerInterval.setSelection(((ArrayAdapter<String>) spinnerInterval.getAdapter()).getPosition(interval));
         }
         cursor.close();
     }
 
-    private void saveSettingsToDatabase() {
-        boolean updateAlert = checkBoxUpdateAlert.isChecked();
-        boolean priorityAlert = checkBoxPriority.isChecked();
-        boolean locationLog = checkBoxLocationLog.isChecked();
-        int distance = seekBarDistance.getProgress();
-        int volume = seekBarVolume.getProgress();
-        String interval = spinnerInterval.getSelectedItem().toString();
-        dbHelper.saveSettings(updateAlert, priorityAlert, locationLog, distance, volume, interval);
+    /**
+     * Save settings from UI components into database
+     */
+    private void saveSettings() {
+        ContentValues values = new ContentValues();
+        values.put("update_alert", checkBoxUpdateAlert.isChecked() ? 1 : 0);
+        values.put("priority_alert", checkBoxPriority.isChecked() ? 1 : 0);
+        values.put("location_enable", checkBoxLocationEnable.isChecked() ? 1 : 0);
+        values.put("distance", seekBarDistance.getProgress());
+        values.put("volume", seekBarVolume.getProgress());
+        values.put("interval", spinnerInterval.getSelectedItem().toString());
+
+        dbHelper.saveUserSettings(values); // Use DatabaseHelper to save settings
+
+        Toast.makeText(this, "설정이 저장되었습니다.", Toast.LENGTH_SHORT).show();
     }
 
     @Override
