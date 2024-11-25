@@ -38,9 +38,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         // DatabaseHelper 초기화
         dbHelper = new DatabaseHelper(this);
 
-        //테스트용 임의 DB데이터 삽입
-        dbHelper.insertTestLocationLogs();
-
         // 지도 초기화
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);

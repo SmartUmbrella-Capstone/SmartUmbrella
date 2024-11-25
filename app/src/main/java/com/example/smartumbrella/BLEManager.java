@@ -233,13 +233,11 @@ public class BLEManager {
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             int rssiThreshold = getRssiThreshold();
-            super.onReadRemoteRssi(gatt, rssi, status);
             Log.d("BLEManager", "현재 RSSI: " + rssi);
 
             if (rssi < rssiThreshold) {
-                showNotification("기기와 멀어졌습니다!", "기기가 3미터 이상 멀어졌습니다.");
-                sendDistanceAlert("DISTANCE_EXCEEDED");  // 임계값 초과 시 메시지 전송
-                saveLocationOnAlert(); // 알림 발생 시 위치 저장
+                showNotification("기기와 멀어졌습니다!", "기기가 임계값 이상 멀어졌습니다.");
+                saveLocationOnAlert(); // 위치 저장
             }
         }
     };
@@ -391,27 +389,37 @@ public class BLEManager {
     }
 
     @SuppressLint("MissingPermission")
-    private void saveLocationOnAlert() { //GPS 정보를 가져와 데이터베이스에 저장
+    public void saveLocationOnAlert() { // 위치 권한 확인
         if (!hasLocationPermission()) {
-            Log.e("BLEManager", "위치 권한이 없습니다.");
+            ActivityCompat.requestPermissions((Activity) context,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            Log.e("BLEManager", "위치 권한 없음");
             return;
         }
 
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        Location location = null;
         if (locationManager != null) {
-            Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-            if (location != null) {
-                double latitude = location.getLatitude();
-                double longitude = location.getLongitude();
-                String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-
-                // DatabaseHelper를 통해 LocationLog 테이블에 데이터 저장
-                dbHelper.insertLocationLog(timestamp, latitude, longitude);
-                Log.d("BLEManager", "위치 데이터 저장 완료: " + timestamp + ", " + latitude + ", " + longitude);
-            } else {
-                Log.e("BLEManager", "GPS 데이터를 가져올 수 없습니다.");
+            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (location == null) {
+                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
             }
+        }
+
+        if (location != null) {
+            double latitude = location.getLatitude();
+            double longitude = location.getLongitude();
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+
+            // 위치 정보 저장
+            try {
+                dbHelper.insertLocationLog(timestamp, latitude, longitude);
+                Log.d("BLEManager", "위치 저장 성공: " + timestamp + ", " + latitude + ", " + longitude);
+            } catch (Exception e) {
+                Log.e("BLEManager", "위치 저장 실패: " + e.getMessage());
+            }
+        } else {
+            Log.e("BLEManager", "위치 데이터 없음");
         }
     }
 
