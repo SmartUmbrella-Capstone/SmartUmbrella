@@ -68,8 +68,8 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, SettingActivity.class);
             startActivity(intent);
         });
-//        // Start BLE 버튼 클릭 리스너
-//        buttonStartBLE.setOnClickListener(v -> startBLEScan());
+        // Start BLE 버튼 클릭 리스너
+        buttonStartBLE.setOnClickListener(v -> startBLEScan());
 //
 //        // Stop BLE 버튼 클릭 리스너
 //        buttonStopBLE.setOnClickListener(v -> stopBLEScan());
@@ -124,15 +124,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-//    // BLE 스캔 시작 메서드
-//    @SuppressLint("MissingPermission")
-//    private void startBLEScan() {
-//        if (bleManager.haveAllPermissions()) {
-//            bleManager.startScanning();
-//        } else {
-//            Toast.makeText(this, "필수 권한이 없습니다.", Toast.LENGTH_SHORT).show();
-//        }
-//    }
+    // BLE 스캔 시작 메서드
+    @SuppressLint("MissingPermission")
+    private void startBLEScan() {
+        if (bleManager.haveAllPermissions()) {
+            bleManager.startScanning();
+        } else {
+            Toast.makeText(this, "필수 권한이 없습니다.", Toast.LENGTH_SHORT).show();
+        }
+    }
 //    // BLE 스캔 중지 메서드
 //    private void stopBLEScan() {
 //        bleManager.disconnect(); // Assuming stopScanning method exists in BLEManager class

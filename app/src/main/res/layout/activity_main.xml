@@ -33,8 +33,7 @@
         android:id="@+id/buttonStartBLE"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Start BLE"
-        android:visibility="gone"
+        android:text="RESET"
 
         android:textColor="#FFFFFF"
         android:backgroundTint="#4CAF50"

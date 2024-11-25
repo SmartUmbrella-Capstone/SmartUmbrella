@@ -143,6 +143,7 @@ public class BLEManager {
     }
 
     private final ScanCallback scanCallback = new ScanCallback() {
+        private int logCount = 0;
         @SuppressLint("MissingPermission")
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
@@ -155,7 +156,16 @@ public class BLEManager {
                 Toast.makeText(context, "기기 발견: " + TARGET_DEVICE_NAME, Toast.LENGTH_SHORT).show();
                 connect();
             } else {
+                logCount++;  // 로그 카운트 증가
                 Log.d("BLEManager", "기기 발견 실패 또는 이름 불일치");
+
+                if (logCount >= 50) {
+                    // 로그가 10번 이상 출력되면 메시지 표시
+                    Toast.makeText(context, "전원을 껐다 켜주세요.", Toast.LENGTH_SHORT).show();
+
+                    // 카운터 초기화 (한 번 메시지가 뜨면 카운터를 리셋하여 반복되지 않도록 함)
+                    logCount = 0;
+                }
             }
         }
 
@@ -199,9 +209,12 @@ public class BLEManager {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothGatt.STATE_CONNECTED) {
-                    Log.d("BLEManager", "Bluetooth 연결 성공");
-                    new Handler(Looper.getMainLooper()).post(() ->
-                            Toast.makeText(context, "Bluetooth 연결 성공", Toast.LENGTH_SHORT).show());
+                    // UI 스레드에서 Toast 띄우기
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        if (context != null) {
+                            Toast.makeText(context, "Bluetooth 연결 성공", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                     gatt.discoverServices();
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     Log.d("BLEManager", "Bluetooth 연결 해제");
@@ -274,6 +287,7 @@ public class BLEManager {
                             }
                         } else {
                             Log.e("BLEManager", "BluetoothGatt 객체가 null입니다. RSSI 값을 읽을 수 없습니다.");
+                            Toast.makeText(context, "리셋버튼을 눌러주세요", Toast.LENGTH_SHORT).show();
                         }
 
                         // 3초 후 다시 실행
