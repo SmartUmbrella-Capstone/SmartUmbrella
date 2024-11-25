@@ -41,11 +41,13 @@ public class BLEManager {
     private BluetoothDevice selectedDevice;
     private BluetoothGatt gatt;
     private BluetoothGattCharacteristic characteristic;
-    private BluetoothGattCharacteristic batteryLevelCharacteristic;
+
     private static final String TARGET_DEVICE_NAME = "SmartUmbrella";
     private static final String SERVICE_UUID = "37C4E592-77F4-2C36-8BE2-6E5456E6E2CA";
     private static final String CHARACTERISTIC_UUID = "00001111-0000-1000-8000-00805f9b34fb";
+    private static final String BATTERY_SERVICE_UUID = "0000180F-0000-1000-8000-00805f9b34fb";
     private static final String BATTERY_LEVEL_UUID = "00002A19-0000-1000-8000-00805f9b34fb";
+
     private int getRssiThreshold() {
         // 데이터베이스에서 설정된 거리 값을 가져옴
         int userDistanceThreshold = dbHelper.getDistanceSetting();
@@ -214,21 +216,53 @@ public class BLEManager {
             }
         }
 
+        private static final String BATTERY_SERVICE_UUID = "0000180F-0000-1000-8000-00805f9b34fb";
+        private static final String BATTERY_LEVEL_UUID = "00002A19-0000-1000-8000-00805f9b34fb";
+
+        // 서비스와 특성을 검색하는 메서드에서 배터리 상태를 추가
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 BluetoothGattService service = gatt.getService(UUID.fromString(SERVICE_UUID));
                 if (service != null) {
                     characteristic = service.getCharacteristic(UUID.fromString(CHARACTERISTIC_UUID));
-                    batteryLevelCharacteristic = service.getCharacteristic(UUID.fromString(BATTERY_LEVEL_UUID));
-
-                    readBatteryLevel();
-                    startRssiReading();  // 연결이 완료되면 RSSI 주기적 읽기 시작
                 }
+
+                // 배터리 서비스 검색
+                BluetoothGattService batteryService = gatt.getService(UUID.fromString(BATTERY_SERVICE_UUID));
+                if (batteryService != null) {
+                    try {
+                        BluetoothGattCharacteristic batteryLevelCharacteristic = batteryService.getCharacteristic(UUID.fromString(BATTERY_LEVEL_UUID));
+                        if (batteryLevelCharacteristic != null) {
+                            gatt.readCharacteristic(batteryLevelCharacteristic);  // 배터리 레벨 읽기
+                            Log.d("BLEManager", "배터리 서비스에서 배터리 레벨 특성을 찾았습니다.");
+                        } else {
+                            Log.e("BLEManager", "배터리 레벨 특성을 찾을 수 없습니다.");
+                        }
+                    } catch (SecurityException e) {
+                        Log.e("BLEManager", "배터리 레벨 특성 읽기 중 보안 예외 발생: " + e.getMessage());
+                    }
+                } else {
+                    Log.e("BLEManager", "배터리 서비스가 없습니다.");
+                }
+
             } else {
                 Log.e("BLEManager", "서비스 검색 실패");
             }
         }
+
+        // 배터리 레벨 읽은 후 처리
+        @Override
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                if (BATTERY_LEVEL_UUID.equals(characteristic.getUuid().toString())) {
+                    int batteryLevel = characteristic.getValue()[0];  // 배터리 레벨을 0번 인덱스에서 읽음
+                    Log.d("BLEManager", "배터리 레벨: " + batteryLevel + "%");
+                    // 배터리 상태에 따라 알림 보내기 등의 작업을 할 수 있습니다.
+                }
+            }
+        }
+
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
@@ -245,13 +279,7 @@ public class BLEManager {
     };
 
         @SuppressLint("MissingPermission")
-    public void readBatteryLevel() {
-        if (batteryLevelCharacteristic != null) {
-            gatt.readCharacteristic(batteryLevelCharacteristic);
-        } else {
-            Log.e("BLEManager", "배터리 레벨 특성이 없습니다.");
-        }
-    }
+
 
     // RSSI 값을 주기적으로 3초마다 읽기
     private void startRssiReading() {
