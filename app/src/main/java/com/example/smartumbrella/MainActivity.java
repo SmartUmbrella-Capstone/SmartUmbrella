@@ -68,11 +68,11 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, SettingActivity.class);
             startActivity(intent);
         });
-        // Start BLE 버튼 클릭 리스너
-        buttonStartBLE.setOnClickListener(v -> startBLEScan());
-
-        // Stop BLE 버튼 클릭 리스너
-        buttonStopBLE.setOnClickListener(v -> stopBLEScan());
+//        // Start BLE 버튼 클릭 리스너
+//        buttonStartBLE.setOnClickListener(v -> startBLEScan());
+//
+//        // Stop BLE 버튼 클릭 리스너
+//        buttonStopBLE.setOnClickListener(v -> stopBLEScan());
 
 
 
@@ -99,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // 권한 요청 결과 처리
+    @SuppressLint("MissingPermission")
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -114,6 +115,8 @@ public class MainActivity extends AppCompatActivity {
 
             if (allPermissionsGranted) {
                 // 모든 권한이 허용된 경우 BLE 스캔 시작
+                bleManager.startScanning();
+
             } else {
                 // 권한이 거부된 경우 사용자에게 알림
                 Toast.makeText(this, "Bluetooth 권한이 필요합니다.", Toast.LENGTH_SHORT).show();
@@ -121,20 +124,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // BLE 스캔 시작 메서드
-    @SuppressLint("MissingPermission")
-    private void startBLEScan() {
-        if (bleManager.haveAllPermissions()) {
-            bleManager.startScanning();
-        } else {
-            Toast.makeText(this, "필수 권한이 없습니다.", Toast.LENGTH_SHORT).show();
-        }
-    }
-    // BLE 스캔 중지 메서드
-    private void stopBLEScan() {
-        bleManager.disconnect(); // Assuming stopScanning method exists in BLEManager class
-        Toast.makeText(this, "BLE 스캔이 중지되었습니다.", Toast.LENGTH_SHORT).show();
-    }
+//    // BLE 스캔 시작 메서드
+//    @SuppressLint("MissingPermission")
+//    private void startBLEScan() {
+//        if (bleManager.haveAllPermissions()) {
+//            bleManager.startScanning();
+//        } else {
+//            Toast.makeText(this, "필수 권한이 없습니다.", Toast.LENGTH_SHORT).show();
+//        }
+//    }
+//    // BLE 스캔 중지 메서드
+//    private void stopBLEScan() {
+//        bleManager.disconnect(); // Assuming stopScanning method exists in BLEManager class
+//        Toast.makeText(this, "BLE 스캔이 중지되었습니다.", Toast.LENGTH_SHORT).show();
+//    }
 
 
 }

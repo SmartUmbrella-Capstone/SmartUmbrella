@@ -232,6 +232,7 @@ public class BLEManager {
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+
             int rssiThreshold = getRssiThreshold();
             super.onReadRemoteRssi(gatt, rssi, status);
             Log.d("BLEManager", "현재 RSSI: " + rssi);
@@ -266,15 +267,19 @@ public class BLEManager {
                 rssiRunnable = new Runnable() {
                     @Override
                     public void run() {
-                        try {
-                            gatt.readRemoteRssi();  // RSSI 값 읽기
-                        } catch (SecurityException e) {
-                            Log.e("BLEManager", "권한이 없어 RSSI를 읽을 수 없습니다: " + e.getMessage());
-                            Toast.makeText(context, "권한이 부족합니다.", Toast.LENGTH_SHORT).show();
+                        if (gatt != null) {
+                            try {
+                                gatt.readRemoteRssi();  // RSSI 값 읽기
+                            } catch (SecurityException e) {
+                                Log.e("BLEManager", "권한이 없어 RSSI를 읽을 수 없습니다: " + e.getMessage());
+                                Toast.makeText(context, "권한이 부족합니다.", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Log.e("BLEManager", "BluetoothGatt 객체가 null입니다. RSSI 값을 읽을 수 없습니다.");
                         }
 
                         // 3초 후 다시 실행
-                        rssiHandler.postDelayed(this, 3000);
+                        rssiHandler.postDelayed(this, 10000);
                     }
                 };
                 rssiHandler.post(rssiRunnable);  // 첫 실행

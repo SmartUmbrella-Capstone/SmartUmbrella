@@ -66,7 +66,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // UserSetting 데이터 가져오기
     public Cursor getUserSettings() {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.query(TABLE_USER_SETTING, null, null, null, null, null, null);
+        // 가장 최근 데이터 1건 가져오기
+        return db.query(
+                TABLE_USER_SETTING,       // 테이블 이름
+                null,                     // 모든 컬럼 선택
+                null,                     // WHERE 조건 없음
+                null,                     // WHERE 조건 값 없음
+                null,                     // GROUP BY 없음
+                null,                     // HAVING 없음
+                "id DESC",                // id 기준 내림차순 정렬
+                "1"                       // 결과 1건만 반환
+        );
     }
 
     public void saveUserSettings(ContentValues values) {
