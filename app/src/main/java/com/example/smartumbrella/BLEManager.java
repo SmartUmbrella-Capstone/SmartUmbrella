@@ -41,11 +41,11 @@ public class BLEManager {
     private BluetoothDevice selectedDevice;
     private BluetoothGatt gatt;
     private BluetoothGattCharacteristic characteristic;
-    private BluetoothGattCharacteristic batteryLevelCharacteristic;
+
     private static final String TARGET_DEVICE_NAME = "SmartUmbrella";
     private static final String SERVICE_UUID = "37C4E592-77F4-2C36-8BE2-6E5456E6E2CA";
     private static final String CHARACTERISTIC_UUID = "00001111-0000-1000-8000-00805f9b34fb";
-    private static final String BATTERY_LEVEL_UUID = "00002A19-0000-1000-8000-00805f9b34fb";
+
     private int getRssiThreshold() {
         // 데이터베이스에서 설정된 거리 값을 가져옴
         int userDistanceThreshold = dbHelper.getDistanceSetting();
@@ -291,14 +291,7 @@ public class BLEManager {
         }
     };
 
-    @SuppressLint("MissingPermission")
-    public void readBatteryLevel() {
-        if (batteryLevelCharacteristic != null) {
-            gatt.readCharacteristic(batteryLevelCharacteristic);
-        } else {
-            Log.e("BLEManager", "배터리 레벨 특성이 없습니다.");
-        }
-    }
+
 
     // RSSI 값을 주기적으로 3초마다 읽기
     private void startRssiReading() {
