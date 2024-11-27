@@ -41,10 +41,11 @@ public class BLEManager {
     private BluetoothDevice selectedDevice;
     private BluetoothGatt gatt;
     private BluetoothGattCharacteristic characteristic;
-
+    private BluetoothGattCharacteristic batteryLevelCharacteristic;
     private static final String TARGET_DEVICE_NAME = "SmartUmbrella";
     private static final String SERVICE_UUID = "37C4E592-77F4-2C36-8BE2-6E5456E6E2CA";
     private static final String CHARACTERISTIC_UUID = "00001111-0000-1000-8000-00805f9b34fb";
+    private static final String BATTERY_LEVEL_UUID = "00002A19-0000-1000-8000-00805f9b34fb";
 
     private int getRssiThreshold() {
         // 데이터베이스에서 설정된 거리 값을 가져옴
@@ -77,6 +78,7 @@ public class BLEManager {
         }
     }
     private Handler rssiHandler = new Handler(Looper.getMainLooper());
+    private Handler mHandler = new Handler();
     private Runnable rssiRunnable;
     private DatabaseHelper dbHelper;
 
@@ -233,6 +235,8 @@ public class BLEManager {
                 // 사용자 정의 서비스 UUID 사용
                 BluetoothGattService service = gatt.getService(UUID.fromString("37C4E592-77F4-2C36-8BE2-6E5456E6E2CA"));
                 if (service != null) {
+                    characteristic = service.getCharacteristic(UUID.fromString(CHARACTERISTIC_UUID));
+                    batteryLevelCharacteristic = service.getCharacteristic(UUID.fromString(BATTERY_LEVEL_UUID));
                     // 사용자 정의 특성 UUID 사용
                     BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString("00001111-0000-1000-8000-00805f9b34fb"));
                     BluetoothGattCharacteristic batteryLevelCharacteristic = service.getCharacteristic(UUID.fromString("00002A19-0000-1000-8000-00805f9b34fb")); // 배터리 특성 추가
@@ -249,6 +253,7 @@ public class BLEManager {
                             // 일반 예외 처리 로직 추가
                         }
                     }
+                    startRssiReading();  // 연결이 완료되면 RSSI 주기적 읽기 시작
 
                     // 배터리 레벨 특성 읽기
                     if (batteryLevelCharacteristic != null) {
@@ -291,6 +296,7 @@ public class BLEManager {
             }
         }
     };
+
 
 
 
