@@ -41,11 +41,9 @@ public class BLEManager {
     private BluetoothDevice selectedDevice;
     private BluetoothGatt gatt;
     private BluetoothGattCharacteristic characteristic;
-    private BluetoothGattCharacteristic batteryLevelCharacteristic;
     private static final String TARGET_DEVICE_NAME = "SmartUmbrella";
     private static final String SERVICE_UUID = "37C4E592-77F4-2C36-8BE2-6E5456E6E2CA";
     private static final String CHARACTERISTIC_UUID = "00001111-0000-1000-8000-00805f9b34fb";
-    private static final String BATTERY_LEVEL_UUID = "00002A19-0000-1000-8000-00805f9b34fb";
 
     private int getRssiThreshold() {
         // 데이터베이스에서 설정된 거리 값을 가져옴
@@ -78,7 +76,6 @@ public class BLEManager {
         }
     }
     private Handler rssiHandler = new Handler(Looper.getMainLooper());
-    private Handler mHandler = new Handler();
     private Runnable rssiRunnable;
     private DatabaseHelper dbHelper;
 
@@ -232,56 +229,31 @@ public class BLEManager {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                BluetoothGattService service = gatt.getService(UUID.fromString(SERVICE_UUID));
                 // 사용자 정의 서비스 UUID 사용
-                BluetoothGattService service = gatt.getService(UUID.fromString("37C4E592-77F4-2C36-8BE2-6E5456E6E2CA"));
                 if (service != null) {
                     characteristic = service.getCharacteristic(UUID.fromString(CHARACTERISTIC_UUID));
-                    batteryLevelCharacteristic = service.getCharacteristic(UUID.fromString(BATTERY_LEVEL_UUID));
-                    // 사용자 정의 특성 UUID 사용
-                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString("00001111-0000-1000-8000-00805f9b34fb"));
-                    BluetoothGattCharacteristic batteryLevelCharacteristic = service.getCharacteristic(UUID.fromString("00002A19-0000-1000-8000-00805f9b34fb")); // 배터리 특성 추가
 
-                    if (characteristic != null) {
-                        try {
-                            // 특성 값 읽기
-                            gatt.readCharacteristic(characteristic);  // 데이터를 읽을 때 사용
-                        } catch (SecurityException e) {
-                            Log.e("BLE", "SecurityException 발생: " + e.getMessage());
-                            // 예외 처리 로직 추가 (예: 사용자에게 오류 메시지 표시)
-                        } catch (Exception e) {
-                            Log.e("BLE", "기타 예외 발생: " + e.getMessage());
-                            // 일반 예외 처리 로직 추가
-                        }
-                    }
                     startRssiReading();  // 연결이 완료되면 RSSI 주기적 읽기 시작
 
-                    // 배터리 레벨 특성 읽기
-                    if (batteryLevelCharacteristic != null) {
-                        try {
-                            gatt.readCharacteristic(batteryLevelCharacteristic); // 배터리 레벨 데이터 읽기
-                        } catch (SecurityException e) {
-                            Log.e("BLE", "SecurityException 발생: " + e.getMessage());
-                        } catch (Exception e) {
-                            Log.e("BLE", "기타 예외 발생: " + e.getMessage());
-                        }
-                    }
+
 
                     // RSSI 주기적 읽기 시작 (배터리 레벨과 특성 모두 설정한 후)
                     startRssiReading(); // 연결이 완료되면 RSSI 주기적 읽기 시작
                 }
             } else {
-                Log.e("BLE", "서비스 검색 실패: " + status);
+                Log.e("BLEManager", "서비스 검색 실패");
             }
         }
 
-        @Override
-        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                // 읽은 값을 정수로 변환 (배터리 용량 데이터)
-                int receivedData = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                Log.d("BLE", "배터리 용량: " + receivedData);
-            }
-        }
+//        @Override
+//        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+//            if (status == BluetoothGatt.GATT_SUCCESS) {
+//                // 읽은 값을 정수로 변환 (배터리 용량 데이터)
+//                int receivedData = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+//                Log.d("BLE", "배터리 용량: " + receivedData);
+//            }
+//        }
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {

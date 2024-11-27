@@ -47,7 +47,6 @@
         android:layout_height="wrap_content"
         android:text="Stop BLE"
         android:visibility="gone"
-
         android:textColor="#FFFFFF"
         android:backgroundTint="#FF5722"
         android:layout_marginBottom="24dp"
@@ -61,33 +60,35 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp">
 
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_marginEnd="16dp"
-            android:padding="8dp">
+<!--        <LinearLayout-->
+<!--            android:orientation="vertical"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:gravity="center"-->
+<!--            android:layout_marginEnd="16dp"-->
+<!--            android:padding="8dp">-->
 
-            <ImageView
-                android:id="@+id/battery"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/battery"
-                />
+<!--            <ImageView-->
+<!--                android:id="@+id/battery"-->
+<!--                android:layout_width="50dp"-->
+<!--                android:layout_height="50dp"-->
+<!--                android:scaleType="fitCenter"-->
+<!--                android:src="@drawable/battery"-->
+<!--                android:visibility="gone"-->
+<!--                />-->
 
-            <TextView
-                android:id="@+id/batteryPercentage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="75%"
-                android:gravity="center"
-                android:textSize="16sp"
-                android:layout_marginTop="4dp"
-                android:background="#E0E0E0"
-                android:padding="4dp" />
-        </LinearLayout>
+<!--            <TextView-->
+<!--                android:id="@+id/batteryPercentage"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="75%"-->
+<!--                android:gravity="center"-->
+<!--                android:textSize="16sp"-->
+<!--                android:layout_marginTop="4dp"-->
+<!--                android:background="#E0E0E0"-->
+<!--                android:visibility="gone"-->
+<!--                android:padding="4dp" />-->
+<!--        </LinearLayout>-->
 
         <Button
             android:id="@+id/button1"
