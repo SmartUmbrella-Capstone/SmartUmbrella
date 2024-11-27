@@ -9,6 +9,8 @@
 
 // 부저 핀 번호
 #define BUZZER_PIN 25// 부저 핀 번호
+// 배터리 측정 핀 (예시로 34번 핀 사용)
+#define SENSOR_PIN 34  // 배터리 측정 핀
 
 
 // BLE server and characteristic declaration
@@ -55,6 +57,7 @@ void setup() {
   Serial.begin(115200);
 
   pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(SENSOR_PIN, INPUT);
   // Initialize BLE
   BLEDevice::init("SmartUmbrella"); // Set the device name to match the Android app
   BLEServer *pServer = BLEDevice::createServer();
@@ -80,8 +83,30 @@ void setup() {
 
   Serial.println("BLE Server started");
 }
-
+#define R1 10000  // 전압 분배기 저항값 1 (10kΩ)
+#define R2 10000  // 전압 분배기 저항값 1 (10kΩ)
 void loop() {
-  // Add any additional BLE communication or handling code here
+  // 배터리 전압 측정
+  int analogValue = analogRead(SENSOR_PIN);
+  float measuredVoltage = (analogValue * 3.3) / 4095.0;  // 전압 계산
+  float batteryVoltage = measuredVoltage * ((R1 + R2) / R2); // 전압 분배기 보정
+
+  // 전압 -> 배터리 백분율로 변환
+  float batteryPercentage = map(batteryVoltage * 100, 300, 420, 0, 100);  // 예: 3.0V~4.2V
+  if (batteryPercentage > 100) batteryPercentage = 100;
+  if (batteryPercentage < 0) batteryPercentage = 0;
+
+  // 배터리 용량을 데이터로 간주하고 전송
+  int dataToSend = (int)batteryPercentage;  // 예시: 배터리 용량을 데이터로 처리
+
+  // 데이터 설정 및 알림 전송
+  pCharacteristic->setValue(dataToSend);  // 데이터 값을 설정
+  pCharacteristic->notify();  // 알림 전송
+
+  // 시리얼 출력
+  Serial.print("Battery Data Sent: ");
+  Serial.println(dataToSend);
+
+  delay(10000);  // 10초 대기
 }
 
