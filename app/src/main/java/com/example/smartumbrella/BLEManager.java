@@ -251,6 +251,7 @@ public class BLEManager {
 
             if (rssi < rssiThreshold) {
                 showNotification("기기와 멀어졌습니다!", "기기가 임계값 이상 멀어졌습니다.");
+                sendDistanceAlert("DISTANCE_EXCEEDED");  // 임계값 초과 시 메시지 전송
                 saveLocationOnAlert(); // 위치 저장
             }
         }
