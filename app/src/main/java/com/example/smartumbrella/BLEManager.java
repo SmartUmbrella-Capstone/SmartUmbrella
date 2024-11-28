@@ -57,6 +57,17 @@ public class BLEManager {
 
         return rssiThreshold;
     }
+//    private int getUserVolume() {
+//        int userVolumeSetting = dbHelper.getVolumeSetting();
+//        // Validating user volume, and setting default to 50 if out of bounds
+//        if (userVolumeSetting < 0 || userVolumeSetting > 100) {
+//            Log.w("BLEManager", "잘못된 볼륨 값(" + userVolumeSetting + ")이 감지되었습니다. 기본값 50으로 설정합니다.");
+//            userVolumeSetting = 50; // Default volume setting
+//        }
+//        Log.d("BLEManager", "사용자 설정 볼륨 값: " + userVolumeSetting);
+//        return userVolumeSetting;
+//    }
+
 
     private int convertDistanceToRssi(int distance) {
         if (distance <= 1) {
@@ -208,12 +219,9 @@ public class BLEManager {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothGatt.STATE_CONNECTED) {
-                    // UI 스레드에서 Toast 띄우기
-                    new Handler(Looper.getMainLooper()).post(() -> {
-                        if (context != null) {
-                            Toast.makeText(context, "Bluetooth 연결 성공", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                    Log.d("BLEManager", "Bluetooth 연결 성공");
+                    new Handler(Looper.getMainLooper()).post(() ->
+                            Toast.makeText(context, "Bluetooth 연결 성공", Toast.LENGTH_SHORT).show());
                     gatt.discoverServices();
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     Log.d("BLEManager", "Bluetooth 연결 해제");
@@ -259,12 +267,16 @@ public class BLEManager {
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
 
             int rssiThreshold = getRssiThreshold();
+//            int userVolume = getUserVolume();
             Log.d("BLEManager", "현재 RSSI: " + rssi);
 
             if (rssi < rssiThreshold) {
                 showNotification("기기와 멀어졌습니다!", "기기가 임계값 이상 멀어졌습니다.");
+//                sendVolume(userVolume);
                 sendDistanceAlert("DISTANCE_EXCEEDED");  // 임계값 초과 시 메시지 전송
                 saveLocationOnAlert(); // 위치 저장
+                Log.d("BLEManager", "위치저장");
+
             }
         }
     };
@@ -314,7 +326,7 @@ public class BLEManager {
             }
         } else {
             Log.e("BLEManager", "연결된 GATT 서버가 없습니다.");
-            Toast.makeText(context, "연결된 GATT 서버가 없습니다.", Toast.LENGTH_SHORT).show();
+          //  Toast.makeText(context, "연결된 GATT 서버가 없습니다.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -360,16 +372,56 @@ public class BLEManager {
             boolean success = gatt.writeCharacteristic(characteristic); // BLE로 전송
             if (success) {
                 Log.d("BLEManager", "거리 경고 전송 성공: " + message);
-                Toast.makeText(context, "거리 경고 전송 성공: " + message, Toast.LENGTH_SHORT).show();
+                if (context instanceof Activity) {
+//                    ((Activity) context).runOnUiThread(() ->
+//                            Toast.makeText(context, "거리 경고 전송 성공: " + message, Toast.LENGTH_SHORT).show());
+                }
             } else {
                 Log.e("BLEManager", "거리 경고 전송 실패");
-                Toast.makeText(context, "거리 경고 전송 실패", Toast.LENGTH_SHORT).show();
+                if (context instanceof Activity) {
+//                    ((Activity) context).runOnUiThread(() ->
+//                            Toast.makeText(context, "거리 경고 전송 실패", Toast.LENGTH_SHORT).show());
+                }
             }
         } else {
             Log.e("BLEManager", "전송할 특성이 없습니다.");
-            Toast.makeText(context, "전송할 특성이 없습니다.", Toast.LENGTH_SHORT).show();
+            if (context instanceof Activity) {
+//                ((Activity) context).runOnUiThread(() ->
+//                        Toast.makeText(context, "전송할 특성이 없습니다.", Toast.LENGTH_SHORT).show());
+            }
         }
     }
+
+
+//    @SuppressLint("MissingPermission")
+//    public void sendVolume(int volume) {
+//        // Validate that the volume is within the 0 to 100 range
+//        if (volume < 0 || volume > 100) {
+//            Log.e("BLEManager", "볼륨 값은 0 ~ 100 사이여야 합니다. 입력값: " + volume);
+//            return;
+//        }
+//
+//        // Check if the characteristic is available
+//        if (characteristic != null) {
+//            // Convert the volume value to a string to send via BLE
+//            String message = String.valueOf(volume);
+//
+//            // Set the value to the characteristic
+//            characteristic.setValue(message);
+//
+//            // Write the characteristic asynchronously and handle success/failure via a callback
+//            boolean success = gatt.writeCharacteristic(characteristic);
+//
+//            if (success) {
+//                Log.d("BLEManager", "볼륨 전송 시작: " + message);
+//            } else {
+//                Log.e("BLEManager", "볼륨 전송 실패");
+//            }
+//        } else {
+//            Log.e("BLEManager", "전송할 특성이 없습니다.");
+//        }
+//    }
+
 
 
 
@@ -381,14 +433,14 @@ public class BLEManager {
             boolean success = gatt.writeCharacteristic(characteristic); // 특성을 ESP32로 전송
             if (success) {
                 Log.d("BLEManager", "SMS 경고 전송 성공: " + message);
-                Toast.makeText(context, "SMS 경고 전송 성공: " + message, Toast.LENGTH_SHORT).show();
+               // Toast.makeText(context, "SMS 경고 전송 성공: " + message, Toast.LENGTH_SHORT).show();
             } else {
                 Log.e("BLEManager", "SMS 경고 전송 실패");
-                Toast.makeText(context, "SMS 경고 전송 실패", Toast.LENGTH_SHORT).show();
+              //  Toast.makeText(context, "SMS 경고 전송 실패", Toast.LENGTH_SHORT).show();
             }
         } else {
             Log.e("BLEManager", "전송할 특성이 없습니다.");
-            Toast.makeText(context, "전송할 특성이 없습니다.", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(context, "전송할 특성이 없습니다.", Toast.LENGTH_SHORT).show();
         }
     }
     // Send SMS alert via BLE
@@ -399,14 +451,14 @@ public class BLEManager {
             boolean success = gatt.writeCharacteristic(characteristic); // 특성을 ESP32로 전송
             if (success) {
                 Log.d("BLEManager", "SMS 경고 전송 성공: " + message);
-                Toast.makeText(context, "SMS 경고 전송 성공: " + message, Toast.LENGTH_SHORT).show();
+              //  Toast.makeText(context, "SMS 경고 전송 성공: " + message, Toast.LENGTH_SHORT).show();
             } else {
                 Log.e("BLEManager", "SMS 경고 전송 실패");
-                Toast.makeText(context, "SMS 경고 전송 실패", Toast.LENGTH_SHORT).show();
+              //  Toast.makeText(context, "SMS 경고 전송 실패", Toast.LENGTH_SHORT).show();
             }
         } else {
             Log.e("BLEManager", "전송할 특성이 없습니다.");
-            Toast.makeText(context, "전송할 특성이 없습니다.", Toast.LENGTH_SHORT).show();
+          //  Toast.makeText(context, "전송할 특성이 없습니다.", Toast.LENGTH_SHORT).show();
         }
     }
 
