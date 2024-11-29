@@ -32,15 +32,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "latitude REAL NOT NULL, " +
             "longitude REAL NOT NULL" +
             ");";
-
-//    // BatteryStatus 테이블
-//    private static final String TABLE_BATTERY_STATUS = "BatteryStatus";
-//    private static final String CREATE_TABLE_BATTERY_STATUS = "CREATE TABLE " + TABLE_BATTERY_STATUS + " (" +
-//            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-//            "timestamp TEXT NOT NULL, " +
-//            "battery_level INTEGER NOT NULL" +
-//            ");";
-
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -49,7 +40,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_USER_SETTING);
         db.execSQL(CREATE_TABLE_LOCATION_LOG);
-//        db.execSQL(CREATE_TABLE_BATTERY_STATUS);
     }
 
     @Override
@@ -102,6 +92,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         return distance;
     }
+
     // 볼륨 설정 가져오기
     public int getVolumeSetting() {
         int volume = 50;  // 기본값을 5로 설정 (적절한 기본값으로 설정하세요)

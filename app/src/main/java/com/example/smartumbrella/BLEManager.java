@@ -254,25 +254,15 @@ public class BLEManager {
             }
         }
 
-//        @Override
-//        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-//            if (status == BluetoothGatt.GATT_SUCCESS) {
-//                // 읽은 값을 정수로 변환 (배터리 용량 데이터)
-//                int receivedData = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-//                Log.d("BLE", "배터리 용량: " + receivedData);
-//            }
-//        }
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
 
             int rssiThreshold = getRssiThreshold();
-//            int userVolume = getUserVolume();
             Log.d("BLEManager", "현재 RSSI: " + rssi);
 
             if (rssi < rssiThreshold) {
                 showNotification("기기와 멀어졌습니다!", "기기가 임계값 이상 멀어졌습니다.");
-//                sendVolume(userVolume);
                 sendDistanceAlert("DISTANCE_EXCEEDED");  // 임계값 초과 시 메시지 전송
                 saveLocationOnAlert(); // 위치 저장
                 Log.d("BLEManager", "위치저장");
@@ -395,21 +385,20 @@ public class BLEManager {
 
 //    @SuppressLint("MissingPermission")
 //    public void sendVolume(int volume) {
-//        // Validate that the volume is within the 0 to 100 range
+//        // 볼륨 범위 체크
 //        if (volume < 0 || volume > 100) {
 //            Log.e("BLEManager", "볼륨 값은 0 ~ 100 사이여야 합니다. 입력값: " + volume);
 //            return;
 //        }
 //
-//        // Check if the characteristic is available
+//        // characteristic 객체가 null인지 확인
 //        if (characteristic != null) {
-//            // Convert the volume value to a string to send via BLE
+//            // 볼륨 값을 문자열로 변환
 //            String message = String.valueOf(volume);
-//
-//            // Set the value to the characteristic
 //            characteristic.setValue(message);
 //
-//            // Write the characteristic asynchronously and handle success/failure via a callback
+//            // BluetoothGattCallback을 사용하여 성공/실패 로그 확인
+//            gatt.setCharacteristicNotification(characteristic, true);  // 알림 활성화
 //            boolean success = gatt.writeCharacteristic(characteristic);
 //
 //            if (success) {
@@ -421,6 +410,7 @@ public class BLEManager {
 //            Log.e("BLEManager", "전송할 특성이 없습니다.");
 //        }
 //    }
+
 
 
 
