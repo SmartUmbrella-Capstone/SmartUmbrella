@@ -241,11 +241,6 @@ public class BLEManager {
                 // 사용자 정의 서비스 UUID 사용
                 if (service != null) {
                     characteristic = service.getCharacteristic(UUID.fromString(CHARACTERISTIC_UUID));
-
-                    startRssiReading();  // 연결이 완료되면 RSSI 주기적 읽기 시작
-
-
-
                     // RSSI 주기적 읽기 시작 (배터리 레벨과 특성 모두 설정한 후)
                     startRssiReading(); // 연결이 완료되면 RSSI 주기적 읽기 시작
                 }
@@ -490,5 +485,6 @@ public class BLEManager {
             Log.e("BLEManager", "위치 데이터 없음");
         }
     }
+
 
 }

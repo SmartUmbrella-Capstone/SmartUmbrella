@@ -55,12 +55,12 @@
         android:id="@+id/textViewVolume"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="알림 음량: 50" />
+        android:text="알림 음량: 0" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="알림 주기 설정:" />
+<!--    <TextView-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="알림 주기 설정:" />-->
 
     <Spinner
         android:id="@+id/spinnerInterval"
