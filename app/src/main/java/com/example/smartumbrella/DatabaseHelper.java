@@ -93,24 +93,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return distance;
     }
 
-    // 볼륨 설정 가져오기
-    public int getVolumeSetting() {
-        int volume = 50;  // 기본값을 5로 설정 (적절한 기본값으로 설정하세요)
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT volume FROM " + TABLE_USER_SETTING + " ORDER BY id DESC LIMIT 1", null);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            volume = cursor.getInt(cursor.getColumnIndexOrThrow("volume"));
-            Log.d("DB", "데이터베이스에서 가져온 볼륨 설정 값: " + volume);
-        } else {
-            Log.d("DB", "설정 값이 없거나 데이터베이스에서 값을 가져오는 데 실패했습니다.");
-        }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return volume;
-    }
-
     // LocationLog 데이터 가져오기
     public Cursor getLocationLogs() {
         SQLiteDatabase db = this.getReadableDatabase();
