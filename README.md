@@ -2,50 +2,78 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 
-// BLE service and characteristic UUIDs
+// BLE 서비스 및 특성 UUID
 #define SERVICE_UUID        "37C4E592-77F4-2C36-8BE2-6E5456E6E2CA"
 #define CHARACTERISTIC_UUID "00001111-0000-1000-8000-00805f9b34fb"
 
 // 부저 핀 번호
-#define BUZZER_PIN 25// 부저 핀 번호
+#define BUZZER_PIN 25
 
+// 부저 상태 관리 변수
+bool isBuzzerOn = false;  // 부저 상태
 
-
-// BLE server and characteristic declaration
+// BLE 서버와 특성 선언
 BLECharacteristic *pCharacteristic;
 
 // Callback class for the BLE characteristic
 class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *pCharacteristic) override {
     // This callback is triggered when the characteristic value is updated
-    String value = pCharacteristic->getValue().c_str(); //x Get the value as a std::string
-    String message = String(value.c_str()); // Convert std::string to Arduino String for easier handling
+    String value = pCharacteristic->getValue().c_str();
+    String message = String(value.c_str()); // 메시지를 String으로 처리
     Serial.print("Received Value: ");
-    Serial.println(message);  // Display the received message
-    if (message == "DISTANCE_EXCEEDED") {
-      // 임계값 초과 메시지를 수신한 경우 부저 울리기
+    Serial.println(message);  // 수신된 메시지 출력
+
+    if (message == "DISTANCE_EXCEEDED1") {
+      // DISTANCE_EXCEEDED1 메시지 수신 시 부저 기본 주파수(200Hz)로 울리기
+      Serial.println("DISTANCE_EXCEEDED1 received - Buzzer should sound with 200Hz.");
       digitalWrite(BUZZER_PIN, HIGH);  // 부저 ON
       delay(2000);  // 2초 동안 울림
       digitalWrite(BUZZER_PIN, LOW);   // 부저 OFF
     }
-    // Check if the received message contains a specific command
-    if (message == "OK") {
-      Serial.println("Received OK message!");
-      // 시리얼 모니터에 부저 울리는 동작 대신 메시지 출력
-      Serial.println("Buzzer would be triggered now (simulated).");
-      digitalWrite(BUZZER_PIN,HIGH);
-      delay(500);
-      digitalWrite(BUZZER_PIN,LOW);
-      delay(500);
+
+    if (message == "DISTANCE_EXCEEDED") {
+      // DISTANCE_EXCEEDED 메시지 수신 시 부저 주파수를 1400Hz로 설정
+      Serial.println("DISTANCE_EXCEEDED received - Buzzer should sound with 1400Hz.");
+      tone(BUZZER_PIN, 1400);  // 1400Hz로 부저 울리기
+      delay(2000);  // 2초 동안 울림
+      noTone(BUZZER_PIN);    // 부저 끄기
     }
-     if (message == "Call") {
-      Serial.println("Received call alert!");
-      // 부저 울리기 (전화 수신 알림)
-      digitalWrite(BUZZER_PIN, HIGH);
+
+    if (message == "OK1") {
+      // OK 메시지 수신 시 부저 주파수를 1400Hz로 설정
+      Serial.println("OK received - Buzzer should sound with 1400Hz.");
+      tone(BUZZER_PIN, 1400);  // 1400Hz로 부저 울리기
+      delay(2000);  // 2초 동안 울림
+      noTone(BUZZER_PIN);    // 부저 끄기
+    }
+
+    if (message == "OK") {
+      // OK1 메시지 수신 시 부저 기본 주파수(200Hz)로 울리기
+      Serial.println("OK1 received - Buzzer should sound with 200Hz.");
+      digitalWrite(BUZZER_PIN, HIGH);  // 부저 ON
+      delay(2000);  // 2초 동안 울림
+      digitalWrite(BUZZER_PIN, LOW);   // 부저 OFF
+    }
+
+    if (message == "Call1") {
+      // Call 메시지 수신 시 부저 주파수를 1400Hz로 설정
+      Serial.println("Call received - Buzzer should sound with 1400Hz.");
+      tone(BUZZER_PIN, 1400);  // 1400Hz로 부저 울리기
       delay(5000);  // 5초 동안 울림
-      digitalWrite(BUZZER_PIN, LOW);
-    } else {
-      // Process other messages
+      noTone(BUZZER_PIN);    // 부저 끄기
+    }
+
+    if (message == "Call") {
+      // Call1 메시지 수신 시 부저 기본 주파수(200Hz)로 울리기
+      Serial.println("Call1 received - Buzzer should sound with 200Hz.");
+      digitalWrite(BUZZER_PIN, HIGH);  // 부저 ON
+      delay(5000);  // 5초 동안 울림
+      digitalWrite(BUZZER_PIN, LOW);   // 부저 OFF
+    }
+
+    // 다른 메시지 처리
+    else {
       Serial.println("Message received from BLE: " + message);
     }
   }
@@ -54,7 +82,8 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
 void setup() {
   Serial.begin(115200);
 
-  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT); // 부저 핀을 출력 모드로 설정
+
   // Initialize BLE
   BLEDevice::init("SmartUmbrella"); // Set the device name to match the Android app
   BLEServer *pServer = BLEDevice::createServer();
@@ -82,5 +111,5 @@ void setup() {
 }
 
 void loop() {
+  // BLE 서버가 계속 동작하도록 하며 특별히 처리할 내용은 없음
 }
-
