@@ -10,7 +10,7 @@ import android.util.Log;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "SmartUmbrella.db";
-    private static final int DATABASE_VERSION = 3; // 버전 업데이트
+    private static final int DATABASE_VERSION = 4; // 버전 업데이트
 
     // UserSetting 테이블
     private static final String TABLE_USER_SETTING = "UserSetting";
@@ -32,6 +32,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "latitude REAL NOT NULL, " +
             "longitude REAL NOT NULL" +
             ");";
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -50,6 +51,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         if (oldVersion < 3) {
             db.execSQL("ALTER TABLE UserSetting ADD COLUMN location_enable INTEGER DEFAULT 0;");
+        }
+        if (oldVersion < 4) {
+            // 체크박스 상태를 저장할 컬럼 추가
+            db.execSQL("ALTER TABLE UserSetting ADD COLUMN check_box_state INTEGER DEFAULT 0;");
         }
     }
 

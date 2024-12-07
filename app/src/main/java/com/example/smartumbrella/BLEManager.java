@@ -16,6 +16,7 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
@@ -250,18 +251,32 @@ public class BLEManager {
         }
 
 
-        @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-
             int rssiThreshold = getRssiThreshold();
             Log.d("BLEManager", "현재 RSSI: " + rssi);
 
+            // 데이터베이스에서 체크박스 상태를 읽어옴
+            DatabaseHelper dbHelper = new DatabaseHelper(context);
+            Cursor cursor = dbHelper.getUserSettings();
+            boolean isChecked = false;
+
+            if (cursor != null) {
+                try {
+                    if (cursor.moveToFirst()) {
+                        isChecked = cursor.getInt(cursor.getColumnIndexOrThrow("check_box_state")) == 1;
+                    }
+                } finally {
+                    cursor.close(); // 반드시 커서를 닫아야 합니다.
+                }
+            }
+
+            String message = isChecked ? "DISTANCE_EXCEEDED" : "DISTANCE_EXCEEDED1";  // 체크박스 상태에 따른 메시지 결정
+
             if (rssi < rssiThreshold) {
                 showNotification("기기와 멀어졌습니다!", "기기가 임계값 이상 멀어졌습니다.");
-                sendDistanceAlert("DISTANCE_EXCEEDED");  // 임계값 초과 시 메시지 전송
+                sendDistanceAlert(message);  // 상태에 맞는 메시지 전송
                 saveLocationOnAlert(); // 위치 저장
                 Log.d("BLEManager", "위치저장");
-
             }
         }
     };
@@ -376,37 +391,6 @@ public class BLEManager {
             }
         }
     }
-
-
-//    @SuppressLint("MissingPermission")
-//    public void sendVolume(int volume) {
-//        // 볼륨 범위 체크
-//        if (volume < 0 || volume > 100) {
-//            Log.e("BLEManager", "볼륨 값은 0 ~ 100 사이여야 합니다. 입력값: " + volume);
-//            return;
-//        }
-//
-//        // characteristic 객체가 null인지 확인
-//        if (characteristic != null) {
-//            // 볼륨 값을 문자열로 변환
-//            String message = String.valueOf(volume);
-//            characteristic.setValue(message);
-//
-//            // BluetoothGattCallback을 사용하여 성공/실패 로그 확인
-//            gatt.setCharacteristicNotification(characteristic, true);  // 알림 활성화
-//            boolean success = gatt.writeCharacteristic(characteristic);
-//
-//            if (success) {
-//                Log.d("BLEManager", "볼륨 전송 시작: " + message);
-//            } else {
-//                Log.e("BLEManager", "볼륨 전송 실패");
-//            }
-//        } else {
-//            Log.e("BLEManager", "전송할 특성이 없습니다.");
-//        }
-//    }
-
-
 
 
 

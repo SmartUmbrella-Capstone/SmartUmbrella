@@ -3,6 +3,7 @@ package com.example.smartumbrella;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -32,9 +33,15 @@ public class CallReceiver extends BroadcastReceiver {
                     String incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
                     Log.d(TAG, "Incoming call from: " + incomingNumber);
 
-                    // Send a fixed "Call Alert" message to the BLE device
+                    // Read checkbox state from SharedPreferences
+                    SharedPreferences sharedPreferences = context.getSharedPreferences("user_settings", Context.MODE_PRIVATE);
+                    boolean isChecked = sharedPreferences.getBoolean("isChecked", false); // 기본값은 false
+
+                    // Set message based on checkbox state
+                    String callAlertMessage = isChecked ? "Cal1l" : "Call0"; // 체크박스가 1일 때 "Call", 0일 때 "Call1"
+
+                    // Send the call alert message to the BLE device
                     if (bleManager != null) {
-                        String callAlertMessage = "Call"; // You can customize the message as needed
                         bleManager.sendCallAlert(callAlertMessage); // Send the call alert message
                     } else {
                         Log.e(TAG, "BLEManager is not initialized.");
@@ -43,4 +50,5 @@ public class CallReceiver extends BroadcastReceiver {
             }
         }
     }
+
 }

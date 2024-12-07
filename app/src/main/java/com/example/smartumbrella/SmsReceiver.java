@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.provider.Telephony;
 import android.telephony.SmsMessage;
 import android.util.Log;
@@ -41,10 +42,16 @@ public class SmsReceiver extends BroadcastReceiver {
                 // Log SMS details
                 Log.d(TAG, "SMS received from: " + sender + ", Content: " + messageText);
 
-                // Send a fixed "OK" message to the BLE device
+                // Read checkbox state from SharedPreferences
+                SharedPreferences sharedPreferences = context.getSharedPreferences("user_settings", Context.MODE_PRIVATE);
+                boolean isChecked = sharedPreferences.getBoolean("isChecked", false); // 기본값은 false
+
+                // Set message based on checkbox state
+                String smsAlertMessage = isChecked ? "OK1" : "OK"; // 체크박스가 1일 때 "OK1", 0일 때 "OK"
+
+                // Send the SMS alert message to the BLE device
                 if (bleManager != null) {
-                    String okMessage = "OK"; // Send "OK" regardless of the SMS content
-                    bleManager.sendSmsAlert(okMessage); // Send the "OK" message
+                    bleManager.sendSmsAlert(smsAlertMessage); // Send the SMS alert message
                 } else {
                     Log.e(TAG, "BLEManager is not initialized.");
                 }
@@ -53,4 +60,5 @@ public class SmsReceiver extends BroadcastReceiver {
             }
         }
     }
+
 }

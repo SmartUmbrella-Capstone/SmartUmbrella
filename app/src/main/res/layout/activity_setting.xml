@@ -41,14 +41,14 @@
         android:layout_height="wrap_content"
         android:text="알림 거리: 0m" />
 
-
-
-
-<!--    <TextView-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="알림 주기 설정:" />-->
-
+    <!-- 볼륨 낮추기 체크박스 추가 -->
+    <CheckBox
+        android:id="@+id/checkBoxLowerVolume"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="알림 시 볼륨 낮추기"
+        android:paddingTop="8dp"
+        android:textSize="16sp" />
 
     <Button
         android:id="@+id/buttonSave"

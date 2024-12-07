@@ -13,6 +13,7 @@ public class SettingActivity extends AppCompatActivity {
     private SeekBar seekBarDistance;
     private TextView textViewDistance;
     private Button buttonSave;
+    private CheckBox checkBox;
     private DatabaseHelper dbHelper;
 
     @Override
@@ -53,8 +54,9 @@ public class SettingActivity extends AppCompatActivity {
         seekBarDistance = findViewById(R.id.seekBarDistance);
         textViewDistance = findViewById(R.id.textViewDistance);
         buttonSave = findViewById(R.id.buttonSave);
+        checkBox = findViewById(R.id.checkBoxLowerVolume);
 
-        // Initialize SeekBars
+        // Initialize SeekBar
         seekBarDistance.setMax(30);
 
         // SeekBar listeners
@@ -81,7 +83,7 @@ public class SettingActivity extends AppCompatActivity {
             try {
                 if (cursor.moveToFirst()) {
                     seekBarDistance.setProgress(cursor.getInt(cursor.getColumnIndexOrThrow("distance")));
-                    // Add interval processing logic if needed
+                    checkBox.setChecked(cursor.getInt(cursor.getColumnIndexOrThrow("check_box_state")) == 1);
                 }
             } finally {
                 cursor.close(); // Ensure the cursor is closed
@@ -95,11 +97,14 @@ public class SettingActivity extends AppCompatActivity {
     private void saveSettings() {
         ContentValues values = new ContentValues();
         values.put("distance", seekBarDistance.getProgress());
+        values.put("check_box_state", checkBox.isChecked() ? 1 : 0);
 
         dbHelper.saveUserSettings(values); // Use DatabaseHelper to save settings
 
         Toast.makeText(this, "설정이 저장되었습니다.", Toast.LENGTH_SHORT).show();
     }
+
+    
 
     @Override
     public boolean onSupportNavigateUp() {
